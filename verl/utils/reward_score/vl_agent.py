@@ -263,7 +263,7 @@ def compute_score(predict_str: str, ground_truth: str, extra_info=None) -> float
     # reward 1
     # return 0.8 * acc_reward + 0.2 * format_reward + 0.4 * tool_reward_base
     # reward 2
-    return 0.8 * acc_reward + 0.2 * format_reward + 1.2 * tool_reward
+    final_score = 0.8 * acc_reward + 0.2 * format_reward + 1.2 * tool_reward
 
     # reward 2 
     # return 1.0 * acc_reward + 0.2 * format_reward + 1.0 * tool_reward + 0.2 * tool_reward_base
@@ -274,6 +274,10 @@ def compute_score(predict_str: str, ground_truth: str, extra_info=None) -> float
     # extra_reward = tool_reward_base * (count_vision_1 - 1) * (1 - acc_reward)
     # return  0.8 * acc_reward + 0.2 * format_reward + 0.4 * tool_reward_base  + 0.2 * extra_reward
 
+    return {
+        "score": final_score,
+        "acc": acc_reward,
+    }
 
 
 def compute_common_reasoning(predict_str: str, ground_truth: str, extra_info=None) -> float:
@@ -339,7 +343,12 @@ def compute_common_reasoning(predict_str: str, ground_truth: str, extra_info=Non
     tool_reward = 1.0 if count_vision_1 > 0 and acc_reward > 0.5 else 0.0
     format_reward = -1.0 if is_format_error else 0.0
     print(f' [DEBUG] query={extra_info["question"]}, {ground_truth=}, {answer_text=}, {acc_reward=}, {format_reward=}')
-    return 0.8 * acc_reward + 0.2 * format_reward + 1.2 * tool_reward
+    final_score = 0.8 * acc_reward + 0.2 * format_reward + 1.2 * tool_reward
+
+    return {
+        "score": final_score,
+        "acc": acc_reward,
+    }
 
 
 def rule_math_verify(ground_truth, model_answer):
@@ -431,7 +440,12 @@ def compute_score_math(predict_str: str, ground_truth: str, extra_info=None) -> 
     
     format_reward = -1.0 if is_format_error else 0.0
     print(f' [DEBUG] query={extra_info["question"]}, {ground_truth=}, {model_answer=}, {acc_reward=}, {format_reward=}')
-    return 2.0 * acc_reward + 0.2 * format_reward
+    final_score = 2.0 * acc_reward + 0.2 * format_reward
+
+    return {
+        "score": final_score,
+        "acc": acc_reward,
+    }
 
 
 if __name__ == '__main__':

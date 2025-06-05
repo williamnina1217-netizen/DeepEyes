@@ -157,6 +157,8 @@ def agent_rollout_loop(config, vllm_engine, vllm_inputs, prompts, multi_modal_in
     active_mask = []
     mm_input_list = []
     tool_call_cnt_list = []
+    # TODO: support visualizing rollout_log_probs
+    rollout_log_probs = []
 
     env = ParallelEnv(config.agent, tokenizer, processor)
     env.reset(prompts, vllm_inputs, n=sampling_params.n)
