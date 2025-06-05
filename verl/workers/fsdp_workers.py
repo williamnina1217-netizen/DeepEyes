@@ -567,7 +567,9 @@ class ActorRolloutRefWorker(Worker):
             prompts = self.rollout_sharding_manager.preprocess_data(prompts)
             print(f' [DEBUG 222] data middle: {len(prompts)}')
             output = self.rollout.generate_sequences(prompts=prompts)
+            print(f' [DEBUG 222] data after: {len(output)}')
             output = self.rollout_sharding_manager.postprocess_data(output)
+            print(f' [DEBUG 222] data post: {len(output)}')
 
         output = output.to("cpu")
 
