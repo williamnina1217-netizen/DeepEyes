@@ -51,8 +51,9 @@ logger.setLevel(os.getenv("VERL_LOGGING_LEVEL", "WARN"))
 
 
 class DataParallelPPOActor(BasePPOActor):
-    def __init__(self, config, actor_module: nn.Module, actor_optimizer: torch.optim.Optimizer = None):
+    def __init__(self, config, actor_module: nn.Module, actor_optimizer: torch.optim.Optimizer = None, **kwargs):
         """When optimizer is None, it is Reference Policy"""
+        from verl.models.transformers.monkey_patch import apply_monkey_patch_for_dummy_image
         super().__init__(config)
         self.actor_module = actor_module
         self.actor_optimizer = actor_optimizer
@@ -79,6 +80,10 @@ class DataParallelPPOActor(BasePPOActor):
         )
         self.device_name = get_device_name()
 
+        self.processor = kwargs["processor"]
+
+        apply_monkey_patch_for_dummy_image(self.processor, self.actor_module)
+
     def _forward_micro_batch(self, micro_batch, temperature, calculate_entropy=False) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Returns:
@@ -88,8 +93,12 @@ class DataParallelPPOActor(BasePPOActor):
         response_length = micro_batch["responses"].size(-1)
         multi_modal_inputs = {}
         if "multi_modal_inputs" in micro_batch.keys():
-            for key in micro_batch["multi_modal_inputs"][0].keys():
-                multi_modal_inputs[key] = torch.cat([inputs[key] for inputs in micro_batch["multi_modal_inputs"]], dim=0)
+            batch_keys = []
+            for mb in micro_batch["multi_modal_inputs"]:
+                batch_keys += list(mb.keys())
+            batch_keys = set(batch_keys)
+            for key in batch_keys:
+                multi_modal_inputs[key] = torch.cat([inputs[key] for inputs in micro_batch["multi_modal_inputs"] if key in inputs], dim=0)
 
         with torch.autocast(device_type=self.device_name, dtype=torch.bfloat16):
             input_ids = micro_batch["input_ids"]

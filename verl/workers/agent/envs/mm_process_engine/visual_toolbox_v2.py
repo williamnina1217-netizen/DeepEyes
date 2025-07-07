@@ -110,7 +110,7 @@ class VisualToolBoxV2(ToolBase):
             return obs, reward, done, info
         except Exception as e:
             # Return an error observation if something goes wrong
-            print(f'[ERROR] Execute WRONG - {str(e)} {action_string=}')
+            # print(f'[ERROR] Execute WRONG - {str(e)} {action_string=}')
             obs = "<|im_end|>\n<|im_start|>user\n" + f"Error: {str(e)}</tool_response>" + "<|im_end|>\n<|im_start|>assistant\n<think>"
             reward = 0.0  # No reward for failed execution
             done = False

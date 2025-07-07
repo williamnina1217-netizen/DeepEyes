@@ -225,7 +225,8 @@ class RayDAPOTrainer(RayPPOTrainer):
                             # prompt_uid2metric_std[prompt_uid] = np.std(metric_vals)
                             prompt_uid2metric_std[prompt_uid] = get_reward_gain(metric_vals)
 
-                        kept_prompt_uids = [uid for uid, std in prompt_uid2metric_std.items() if std > 0.15 or len(prompt_uid2metric_vals[uid]) == 1]
+                        threshold = self.config.algorithm.filter_groups.threshold
+                        kept_prompt_uids = [uid for uid, std in prompt_uid2metric_std.items() if std > threshold or len(prompt_uid2metric_vals[uid]) == 1]
                         num_prompt_in_batch += len(kept_prompt_uids)
 
                         kept_traj_idxs = []

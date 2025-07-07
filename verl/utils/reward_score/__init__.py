@@ -86,7 +86,7 @@ def default_compute_score(data_source, solution_str, ground_truth, extra_info=No
         from . import agent
         res = agent.compute_score_eval(solution_str, ground_truth)
 
-    elif data_source in ['vstar', 'vl_agent', 'chart']:
+    elif data_source in ['vstar', 'vl_agent', 'chart', 'browsecomp']:
         from . import vl_agent
         res = vl_agent.compute_score(solution_str, ground_truth, extra_info)
 
@@ -97,6 +97,17 @@ def default_compute_score(data_source, solution_str, ground_truth, extra_info=No
     elif data_source in ['seekworld-test', 'vstar-test']:
         from . import vl_agent
         res = vl_agent.compute_score_acc(solution_str, ground_truth, extra_info)
+
+    elif data_source in ['mmsearch-test', 'simpleqa-openai-test', 'chinese_simpleqa-test', 'browsecomp-zh-test', 'browsecomp-openai-test']:
+        from . benchmark import evaluate_chinese_simpleqa, evaluate_browsecomp_zh, evaluate_openai_brosecomp_hle, evaluate_openai_simpleqa
+        if data_source in ['mmsearch-test', 'simpleqa-openai-test']:
+            res = evaluate_openai_simpleqa(solution_str, ground_truth, extra_info)
+        elif data_source == 'browsecomp-openai-test':
+            res = evaluate_openai_brosecomp_hle(solution_str, ground_truth, extra_info)
+        elif data_source == 'chinese_simpleqa-test':
+            res = evaluate_chinese_simpleqa(solution_str, ground_truth, extra_info)
+        elif data_source == 'browsecomp-zh-test':
+            res = evaluate_browsecomp_zh(solution_str, ground_truth, extra_info)
 
     elif data_source in ['thinklite_eureka', 'xince']:
         from . import vl_agent

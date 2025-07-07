@@ -16,12 +16,14 @@ reward_model:
     len: 0
     penalty_factor: 0.0
     log: False
+  num_workers: 8
 
 algorithm:
   filter_groups:
     enable: False # We try to avoid forgetting to set enable
     metric: null # acc / score / seq_reward / seq_final_reward / ...
     max_num_gen_batches: 0 # Non-positive values mean no upper limit
+    threshold: 0.01
 
 trainer:
   project_name: verl-deepeyes-v2

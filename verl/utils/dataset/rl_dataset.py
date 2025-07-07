@@ -217,15 +217,19 @@ class RLHFDataset(Dataset):
 
             images = None
             if self.image_key in row_dict:
-                origin_images = [process_raw_image(image) for image in row_dict.get(self.image_key)]
-                images = [process_image(image) for image in row_dict.pop(self.image_key)]
-                multi_modal_data["image"] = images
-                origin_multi_modal_data["image"] = origin_images
+                image_values = row_dict.pop(self.image_key, None)
+                if image_values is not None:
+                    origin_images = [process_raw_image(image) for image in image_values]
+                    images = [process_image(image) for image in image_values]
+                    multi_modal_data["image"] = images
+                    origin_multi_modal_data["image"] = origin_images
 
             videos = None
             if self.video_key in row_dict:
-                videos = [process_video(video) for video in row_dict.pop(self.video_key)]
-                multi_modal_data["video"] = [video.numpy() for video in videos]
+                video_values = row_dict.pop(self.video_key, None)
+                if video_values is not None:
+                    videos = [process_video(video) for video in row_dict.pop(self.video_key)]
+                    multi_modal_data["video"] = [video.numpy() for video in videos]
 
             model_inputs = self.processor(text=[raw_prompt], images=images, videos=videos, return_tensors="pt")
 
