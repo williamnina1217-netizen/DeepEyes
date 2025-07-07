@@ -12,6 +12,7 @@ from .envs.visual_agent.vl_agent_v2 import VLAgentEnvV2
 from .envs.visual_agent.vl_agent_v3 import VLAgentEnvV3
 
 from .ens.coding.code_toolbox_v2 import CodeToolBoxV2
+from .envs.xhs_search.image_search import ImageSearch
 
 try:
     from .envs.visual_agent.mm_search_engine import MMSearchEngine

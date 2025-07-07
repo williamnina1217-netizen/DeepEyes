@@ -1,28 +1,27 @@
 set -x
 
 PROJECT_NAME="deepeyes-dapo"
-EXPERIMENT_NAME="eval_7b_v16_seekworld_step40"
+EXPERIMENT_NAME="evaluate_agent_merged"
 
 export SAVE_CHECKPOINT_DIR=/diancpfs/user/fengyuan/verl_checkpoints
 # export VLLM_ATTENTION_BACKEND=XFORMERS # vllm + qwen2-7b with flash_attn has some issues
 
-BASEDIR=/cpfs/user/fengyuan/verl_data/minghao_data
-VISUAL_DATASET_TRAIN_0_1_2=${BASEDIR}/data_0.1.2_visual_toolbox_v2.parquet
-VISUAL_DATASET_TRAIN_0_8=${BASEDIR}/minghao_data_vnew/data_v0.8_visual_toolbox_v2.parquet
-VISUAL_DATASET_TEST=${BASEDIR}/seekworld_test.parquet
-EUREKA_DATASET_TRAIN=${BASEDIR}/data_thinklite_reasoning_function_call.parquet
-XINCE_DATASET_TRAIN=${BASEDIR}/train_xince_acc.parquet
-SEEKWORLD_DATASET_TRAIN=${BASEDIR}/seekworld_train_acc.parquet
+# training set
+DATA_TRAIN_0_1_2=/cpfs/user/fengyuan/verl_data/minghao_data/data_0.1.2_visual_toolbox_v2_acc_v2.parquet
+DATA_TRAIN_0_8_SPLIT1=/cpfs/user/fengyuan/verl_data/minghao_data/minghao_data_vnew/data_v0.8_visual_toolbox_v2_acc_split1_v2.parquet
+DATA_TRAIN_0_8_SPLIT2=/cpfs/user/fengyuan/verl_data/minghao_data/minghao_data_vnew/data_v0.8_visual_toolbox_v2_acc_split2_v2.parquet
+DATA_TRAIN_THINKLITE=/cpfs/user/fengyuan/verl_data/minghao_data/data_thinklite_reasoning_function_call_acc_v2.parquet
+DATA_TRAIN_XINCE=/cpfs/user/fengyuan/verl_data/minghao_data/train_xince_acc_acc_v2.parquet
+DATA_TRAIN_GEOGUESSR=/cpfs/user/fengyuan/verl_data/minghao_data/seekworld_train_acc_acc_v2.parquet
 
-DATA_V2_TRAIN_0_1_2=/cpfs/user/fengyuan/verl_data/minghao_data/data_0.1.2_visual_toolbox_v2_acc_v2.parquet
-DATA_V2_TRAIN_0_8_SPLIT1=/cpfs/user/fengyuan/verl_data/minghao_data/minghao_data_vnew/data_v0.8_visual_toolbox_v2_acc_split1_v2.parquet
-DATA_V2_TRAIN_0_8_SPLIT2=/cpfs/user/fengyuan/verl_data/minghao_data/minghao_data_vnew/data_v0.8_visual_toolbox_v2_acc_split2_v2.parquet
-DATA_V2_TRAIN_THINKLITE=/cpfs/user/fengyuan/verl_data/minghao_data/data_thinklite_reasoning_function_call_acc_v2.parquet
-DATA_V2_TRAIN_XINCE=/cpfs/user/fengyuan/verl_data/minghao_data/train_xince_acc_acc_v2.parquet
-DATA_V2_TRAIN_GEOGUESSR=/cpfs/user/fengyuan/verl_data/minghao_data/seekworld_train_acc_acc_v2.parquet
-
-DATA_V2_TEST_VSTAR=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/vstar_test_v2.parquet
-DATA_V2_TEST_GEOGUESSR=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/seekworld_test_v2_v2.parquet
+# benchmark data
+DATA_TEST_VSTAR=/cpfs/user/fengyuan/benchmarks/parquet/vstar-test.parquet
+DATA_TEST_SEEKWORLD=/cpfs/user/fengyuan/benchmarks/parquet/seekworld-test.parquet
+DATA_TEST_MMSEARCH=/cpfs/user/fengyuan/benchmarks/parquet/mmsearch-test.parquet
+DATA_TEST_BROWSECOMP_OPENAI=/cpfs/user/fengyuan/benchmarks/parquet/openai-browsecomp-test.parquet
+DATA_TEST_BROWSECOMP_ZH=/cpfs/user/fengyuan/benchmarks/parquet/browsecomp-zh-test.parquet
+DATA_TEST_CHINESE_SIMPLEQA=/cpfs/user/fengyuan/benchmarks/parquet/chinese_simpleqa-test.parquet
+DATA_TEST_SIMPLEQA_OPENAI=/cpfs/user/fengyuan/benchmarks/parquet/openai-simpleqa-test.parquet
 
 CUSTOM_STOP='["</tool_call>"]'
 LOSS_AGG_MODE="token-mean"
@@ -30,17 +29,20 @@ export WORKING_DIR=${WORKING_DIR:-"${PWD}"}
 export RUNTIME_ENV=${RUNTIME_ENV:-"${WORKING_DIR}/verl/trainer/runtime_env.yaml"}
 
 REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-7B-Instruct
-REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_7b_debug_v16/global_step_32/actor/huggingface
-REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_32b_debug_v1/global_step_152/actor/huggingface
-REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/reproduce_v1_7b_v0/global_step_128/actor/huggingface
+# REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-32B-Instruct
+
+# REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_7b_debug_v16/global_step_32/actor/huggingface
+# REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_32b_debug_v1/global_step_152/actor/huggingface
+# REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/xhs-deepeyes/search_crop_debug_v8/global_step_40/actor/huggingface
+
 PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     +debug=False \
     +vs_debug=False \
-    data.train_files=[${DATA_V2_TRAIN_GEOGUESSR}] \
-    data.val_files=[${DATA_V2_TEST_GEOGUESSR}] \
-    data.train_batch_size=256 \
-    data.gen_batch_size=128 \
-    data.max_prompt_length=16384 \
+    data.train_files=[${DATA_TRAIN_GEOGUESSR}] \
+    data.val_files=[${DATA_TEST_VSTAR},${DATA_TEST_SEEKWORLD},${DATA_TEST_MMSEARCH},${DATA_TEST_BROWSECOMP_OPENAI},${DATA_TEST_BROWSECOMP_ZH},${DATA_TEST_CHINESE_SIMPLEQA},${DATA_TEST_SIMPLEQA_OPENAI}] \
+    data.train_batch_size=32 \
+    data.gen_batch_size=32 \
+    data.max_prompt_length=18000 \
     data.max_response_length=16384 \
     data.return_raw_chat=True \
     algorithm.adv_estimator=grpo \
@@ -56,7 +58,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.actor.clip_ratio_low=0.2 \
     actor_rollout_ref.actor.clip_ratio_high=0.28 \
     actor_rollout_ref.actor.clip_ratio_c=10.0 \
-    actor_rollout_ref.actor.ppo_mini_batch_size=256 \
+    actor_rollout_ref.actor.ppo_mini_batch_size=32 \
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.actor.use_kl_loss=False \
     actor_rollout_ref.actor.kl_loss_coef=0.0 \
@@ -65,7 +67,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.actor.loss_agg_mode=${LOSS_AGG_MODE} \
     actor_rollout_ref.actor.checkpoint.save_contents=['model','hf_model','optimizer','extra'] \
     actor_rollout_ref.actor.ulysses_sequence_parallel_size=1 \
-    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=8 \
+    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
     actor_rollout_ref.rollout.name=vllm \
     actor_rollout_ref.rollout.n=16 \
@@ -76,16 +78,17 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.rollout.enable_chunked_prefill=False \
     actor_rollout_ref.actor.fsdp_config.param_offload=True \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=True \
-    actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=8 \
+    actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     actor_rollout_ref.rollout.agent.activate_agent=True \
     actor_rollout_ref.rollout.agent.tool_name_key=env_name \
     actor_rollout_ref.rollout.agent.single_response_max_tokens=8192 \
-    actor_rollout_ref.rollout.agent.max_turns=10 \
+    actor_rollout_ref.rollout.agent.max_turns=16 \
     actor_rollout_ref.rollout.agent.concurrent_workers=1 \
     actor_rollout_ref.rollout.agent.custom_stop=${CUSTOM_STOP} \
     actor_rollout_ref.rollout.agent.show_tqdm=True \
-    reward_model.reward_manager=dapo \
+    reward_model.reward_manager=dapo_async \
+    reward_model.num_workers=32 \
     trainer.critic_warmup=0 \
     trainer.logger=['console'] \
     trainer.val_before_train=True \

@@ -258,9 +258,11 @@ def agent_rollout_loop(config, vllm_engine, vllm_inputs, prompts, multi_modal_in
                 running_attn_masks[idx] = torch.cat([running_attn_masks[idx], attn_mask])
 
                 mm_data = obs.get('multi_modal_data', {})
-                if 'image' in mm_data.keys():
+                if "image" in mm_data.keys():
                     if 'multi_modal_data' not in vllm_input_list[idx].keys():
                         vllm_input_list[idx]['multi_modal_data'] = {"image": []}
+                    if "image" not in vllm_input_list[idx]["multi_modal_data"].keys():
+                        vllm_input_list[idx]["multi_modal_data"]["image"] = []
                     vllm_input_list[idx]['multi_modal_data']['image'] += mm_data['image']
 
                 mm_input = obs.get('multi_modal_inputs', {})

@@ -1,7 +1,7 @@
 set -x
 
-PROJECT_NAME="deepeyes-dapo"
-EXPERIMENT_NAME="reproduce_v1_7b_v0"
+PROJECT_NAME="xhs-deepeyes"
+EXPERIMENT_NAME="search_crop_debug_v8"
 
 export SAVE_CHECKPOINT_DIR=/diancpfs/user/fengyuan/verl_checkpoints
 # export VLLM_ATTENTION_BACKEND=XFORMERS # vllm + qwen2-7b with flash_attn has some issues
@@ -24,8 +24,12 @@ DATA_TRAIN_SEEKWORLD=/cpfs/user/fengyuan/verl_data/minghao_data/seekworld_train_
 DATA_TRAIN_GEOGUESSR_1=/cpfs/user/fengyuan/code/github/zero-rl-data/geoguessr/kaggle-geoguessr/kaggle-geoguessr.parquet
 DATA_TRAIN_GEOGUESSR_2=/cpfs/user/fengyuan/code/github/zero-rl-data/geoguessr/deboradum-geogeussr/deboradum-geogeussr-test.parquet
 
+DATA_TRAIN_SEEKWORLD_WITH_SEARCH=/cpfs/user/fengyuan/verl_data/minghao_data/seekworld_train_acc_acc_v2_with_search.parquet
+DATA_TRAIN_BROWSECOMP=/cpfs/user/fengyuan/verl_data/minghao_data/browse_comp_xhs.parquet
+
 DATA_V2_TEST_VSTAR=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/vstar_test_v2.parquet
 DATA_V2_TEST_GEOGUESSR=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/seekworld_test_v2_v2.parquet
+DATA_V2_TEST_GEOGUESSR_WITH_SEARCH=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/seekworld_test_v2_v2_with_search.parquet
 
 CUSTOM_STOP='["</tool_call>"]'
 LOSS_AGG_MODE="token-mean"
@@ -36,8 +40,8 @@ REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-7B-Instruct
 PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     +debug=False \
     +vs_debug=False \
-    data.train_files=[${DATA_V2_TRAIN_0_1_2},${DATA_V2_TRAIN_0_8_SPLIT1},${DATA_V2_TRAIN_0_8_SPLIT2},${DATA_V2_TRAIN_THINKLITE},${DATA_TRAIN_SEEKWORLD}] \
-    data.val_files=[${DATA_V2_TEST_VSTAR}] \
+    data.train_files=[${DATA_V2_TRAIN_0_1_2},${DATA_V2_TRAIN_0_8_SPLIT1},${DATA_V2_TRAIN_0_8_SPLIT2},${DATA_V2_TRAIN_THINKLITE},${DATA_TRAIN_SEEKWORLD_WITH_SEARCH},${DATA_TRAIN_BROWSECOMP}] \
+    data.val_files=[${DATA_V2_TEST_GEOGUESSR_WITH_SEARCH}] \
     data.train_batch_size=256 \
     data.gen_batch_size=128 \
     data.max_prompt_length=12288 \
@@ -51,6 +55,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     algorithm.filter_groups.enable=True \
     algorithm.filter_groups.max_num_gen_batches=32 \
     algorithm.filter_groups.metric=acc \
+    algorithm.filter_groups.threshold=0.28 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.model.enable_gradient_checkpointing=True \
     actor_rollout_ref.actor.optim.lr=1e-6 \
@@ -95,7 +100,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     critic.ppo_micro_batch_size_per_gpu=1 \
     trainer.critic_warmup=0 \
     trainer.logger=['console','wandb','rl_logging_board'] \
-    trainer.val_before_train=True \
+    trainer.val_before_train=False \
     trainer.n_gpus_per_node=8 \
     trainer.nnodes=${WORLD_SIZE} \
     trainer.save_freq=8 \

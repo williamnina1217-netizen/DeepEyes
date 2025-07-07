@@ -223,6 +223,7 @@ def apply_monkey_patch(
     if model.config.model_type == "qwen2_5_vl":
         from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import (
             Qwen2_5_VLFlashAttention2,
+            Qwen2_5_VLForConditionalGeneration,
         )
 
         if use_remove_padding or ulysses_sp_size > 1:
@@ -241,9 +242,17 @@ def apply_monkey_patch(
 
                 patch_vlm_for_ulysses_input_slicing(Qwen2_5_VLModel)
 
+        if use_fused_kernels:
+            from verl.models.transformers.qwen2_5_vl import forward_for_ppo
+
+            Qwen2_5_VLForConditionalGeneration.forward = forward_for_ppo
+
+        return
+
     elif model.config.model_type == "qwen2_vl":
         from transformers.models.qwen2_vl.modeling_qwen2_vl import (
             Qwen2VLFlashAttention2,
+            Qwen2VLForConditionalGeneration,
         )
 
         if use_remove_padding or ulysses_sp_size > 1:
@@ -261,6 +270,13 @@ def apply_monkey_patch(
                 from transformers.models.qwen2_vl.modeling_qwen2_vl import Qwen2VLModel
 
                 patch_vlm_for_ulysses_input_slicing(Qwen2VLModel)
+
+        if use_fused_kernels:
+            from verl.models.transformers.qwen2_vl import forward_for_ppo
+
+            Qwen2VLForConditionalGeneration.forward = forward_for_ppo
+
+        return
 
     elif model.config.model_type == "kimi_vl":
         if use_remove_padding or ulysses_sp_size > 1:
@@ -291,6 +307,48 @@ def apply_monkey_patch(
             print(f"Monkey patch _flash_attention_forward in {flash_attention.__name__}")
 
     patch_forward_with_backends(model, use_fused_kernels=use_fused_kernels, fused_kernels_backend=fused_kernels_backend)
+
+
+def apply_monkey_patch_for_dummy_image(processor, module):
+    """use dummy image in case of zero-3 hang"""
+    from PIL import Image
+    from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import Qwen2_5_VLForConditionalGeneration
+    from transformers.models.qwen2_5_vl.processing_qwen2_5_vl import Qwen2_5_VLProcessor
+
+    from .dummy_image import qwen2_5_vl_forward
+
+    dummy_images = [Image.new("RGB", (64, 64), (255, 255, 255))]
+
+    if hasattr(module._fsdp_wrapped_module, "v_head"):
+        unwrapped_module = module._fsdp_wrapped_module.pretrained_model
+    else:
+        unwrapped_module = module._fsdp_wrapped_module
+
+    # FIXME(wuhuan): 修复 zero3 多图 hang 的问题，这里后面换成更优雅的解法
+    if False: # and isinstance(processor, AgiVLProcessorV11):
+        dummy_pixel_values = processor.preprocess_image(images=dummy_images)[0]
+        unwrapped_module._dummy_mm_inputs = {"pixel_values": dummy_pixel_values}
+    elif isinstance(processor, Qwen2_5_VLProcessor):
+        res = processor.image_processor(images=dummy_images, return_tensors="pt")
+        unwrapped_module._dummy_mm_inputs = res
+        Qwen2_5_VLForConditionalGeneration.forward = qwen2_5_vl_forward
+    print(f"Monkey patch dummy image for Zero-3 Hang bugs")
+
+
+def apply_monkey_patch_for_valuehead(module):
+    from trl import AutoModelForCausalLMWithValueHead
+
+    def state_dict(self, *args, **kwargs):
+        # NOTE(wuhuan): FSDP 负责读写 ，不需要用之前单独保存 value_head. 前缀的逻辑，等需要转为 HF 格式再说
+        return torch.nn.Module.state_dict(self, *args, **kwargs)
+
+    AutoModelForCausalLMWithValueHead.state_dict = state_dict
+
+
+import importlib.metadata
+from functools import lru_cache
+
+from packaging import version
 
 
 @lru_cache
