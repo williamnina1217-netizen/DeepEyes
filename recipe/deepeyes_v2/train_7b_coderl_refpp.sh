@@ -1,7 +1,7 @@
 set -x
 
 PROJECT_NAME="coderl-deepeyes"
-EXPERIMENT_NAME="coderl-base-v4"
+EXPERIMENT_NAME="coderl-base-v6"
 export SAVE_CHECKPOINT_DIR=/diancpfs/user/fengyuan/verl_checkpoints
 # export VLLM_ATTENTION_BACKEND=XFORMERS # vllm + qwen2-7b with flash_attn has some issues
 
@@ -95,6 +95,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.rollout.agent.custom_stop=${CUSTOM_STOP} \
     actor_rollout_ref.rollout.agent.show_tqdm=True \
     reward_model.reward_manager=dapo_async \
+    reward_model.num_workers=16 \
     critic.cliprange_value=50 \
     critic.model.path=${REF_MODEL_PATH} \
     critic.model.fsdp_config.param_offload=True \
