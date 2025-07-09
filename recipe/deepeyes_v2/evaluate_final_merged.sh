@@ -15,13 +15,19 @@ DATA_TRAIN_XINCE=/cpfs/user/fengyuan/verl_data/minghao_data/train_xince_acc_acc_
 DATA_TRAIN_GEOGUESSR=/cpfs/user/fengyuan/verl_data/minghao_data/seekworld_train_acc_acc_v2.parquet
 
 # benchmark data
-DATA_TEST_VSTAR=/cpfs/user/fengyuan/benchmarks/parquet/vstar-test.parquet
-DATA_TEST_SEEKWORLD=/cpfs/user/fengyuan/benchmarks/parquet/seekworld-test.parquet
-DATA_TEST_MMSEARCH=/cpfs/user/fengyuan/benchmarks/parquet/mmsearch-test.parquet
-DATA_TEST_BROWSECOMP_OPENAI=/cpfs/user/fengyuan/benchmarks/parquet/openai-browsecomp-test.parquet
-DATA_TEST_BROWSECOMP_ZH=/cpfs/user/fengyuan/benchmarks/parquet/browsecomp-zh-test.parquet
-DATA_TEST_CHINESE_SIMPLEQA=/cpfs/user/fengyuan/benchmarks/parquet/chinese_simpleqa-test.parquet
-DATA_TEST_SIMPLEQA_OPENAI=/cpfs/user/fengyuan/benchmarks/parquet/openai-simpleqa-test.parquet
+DATA_TEST_VSTAR=/cpfs/user/fengyuan/benchmarks/eval_parquet/vstar-test.parquet
+DATA_TEST_SEEKWORLD=/cpfs/user/fengyuan/benchmarks/eval_parquet/seekworld-test.parquet
+DATA_TEST_MMSEARCH=/cpfs/user/fengyuan/benchmarks/eval_parquet/mmsearch-test.parquet
+DATA_TEST_BROWSECOMP_OPENAI=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-browsecomp-test.parquet
+DATA_TEST_BROWSECOMP_ZH=/cpfs/user/fengyuan/benchmarks/eval_parquet/browsecomp-zh-test.parquet
+DATA_TEST_CHINESE_SIMPLEQA=/cpfs/user/fengyuan/benchmarks/eval_parquet/chinese_simpleqa-test.parquet
+DATA_TEST_SIMPLEQA_OPENAI=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test.parquet
+DATA_TEST_SIMPLE_VQA=/cpfs/user/fengyuan/benchmarks/eval_parquet/simple-vqa-test.parquet
+DATA_TEST_ZERO_BENCH=/cpfs/user/fengyuan/benchmarks/eval_parquet/zero-bench-test.parquet
+
+# split large eval dataset to avoid oom error
+DATA_TEST_SIMPLEQA_OPENAI_SPLIT1=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test_split1.parquet
+DATA_TEST_SIMPLEQA_OPENAI_SPLIT2=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test_split2.parquet
 
 CUSTOM_STOP='["</tool_call>"]'
 LOSS_AGG_MODE="token-mean"
@@ -29,31 +35,30 @@ export WORKING_DIR=${WORKING_DIR:-"${PWD}"}
 export RUNTIME_ENV=${RUNTIME_ENV:-"${WORKING_DIR}/verl/trainer/runtime_env.yaml"}
 
 REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-7B-Instruct
-# REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-32B-Instruct
+REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-32B-Instruct
 
 # REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_7b_debug_v16/global_step_32/actor/huggingface
 # REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_32b_debug_v1/global_step_152/actor/huggingface
-# REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/xhs-deepeyes/search_crop_debug_v8/global_step_40/actor/huggingface
+# REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/xhs-deepeyes/search_crop_debug_v8/global_step_136/actor/huggingface
+
+VAL_FILES='[${DATA_TEST_VSTAR},${DATA_TEST_SEEKWORLD},${DATA_TEST_MMSEARCH},${DATA_TEST_ZERO_BENCH},${DATA_TEST_SIMPLE_VQA},${DATA_TEST_BROWSECOMP_OPENAI},${DATA_TEST_BROWSECOMP_ZH},${DATA_TEST_CHINESE_SIMPLEQA},${DATA_TEST_SIMPLEQA_OPENAI}]]'
 
 PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     +debug=False \
     +vs_debug=False \
     data.train_files=[${DATA_TRAIN_GEOGUESSR}] \
-    data.val_files=[${DATA_TEST_VSTAR},${DATA_TEST_SEEKWORLD},${DATA_TEST_MMSEARCH},${DATA_TEST_BROWSECOMP_OPENAI},${DATA_TEST_BROWSECOMP_ZH},${DATA_TEST_CHINESE_SIMPLEQA},${DATA_TEST_SIMPLEQA_OPENAI}] \
+    data.val_files=[${DATA_TEST_ZERO_BENCH}] \
     data.train_batch_size=32 \
-    data.gen_batch_size=32 \
-    data.max_prompt_length=18000 \
-    data.max_response_length=16384 \
+    data.max_prompt_length=17000 \
+    data.max_response_length=15768 \
     data.return_raw_chat=True \
     algorithm.adv_estimator=grpo \
     algorithm.use_kl_in_reward=False \
     algorithm.kl_ctrl.kl_coef=0.0 \
     actor_rollout_ref.model.path=${REF_MODEL_PATH} \
-    algorithm.filter_groups.enable=True \
-    algorithm.filter_groups.max_num_gen_batches=32 \
-    algorithm.filter_groups.metric=acc \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.model.enable_gradient_checkpointing=True \
+    actor_rollout_ref.model.enable_activation_offload=True \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.actor.clip_ratio_low=0.2 \
     actor_rollout_ref.actor.clip_ratio_high=0.28 \
@@ -68,10 +73,10 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.actor.checkpoint.save_contents=['model','hf_model','optimizer','extra'] \
     actor_rollout_ref.actor.ulysses_sequence_parallel_size=1 \
     actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
-    actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
+    actor_rollout_ref.rollout.tensor_model_parallel_size=2 \
     actor_rollout_ref.rollout.name=vllm \
     actor_rollout_ref.rollout.n=16 \
-    actor_rollout_ref.rollout.max_num_batched_tokens=32768 \
+    actor_rollout_ref.rollout.max_num_batched_tokens=8192 \
     actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
     actor_rollout_ref.rollout.enforce_eager=False \
     actor_rollout_ref.rollout.free_cache_engine=False \

@@ -98,16 +98,26 @@ def default_compute_score(data_source, solution_str, ground_truth, extra_info=No
         from . import vl_agent
         res = vl_agent.compute_score_acc(solution_str, ground_truth, extra_info)
 
-    elif data_source in ['mmsearch-test', 'simpleqa-openai-test', 'chinese_simpleqa-test', 'browsecomp-zh-test', 'browsecomp-openai-test']:
+    elif data_source in [
+        'mmsearch-test', 
+        'simpleqa-openai-test', 
+        'chinese_simpleqa-test', 
+        'browsecomp-zh-test', 
+        'browsecomp-openai-test', 
+        'simple-vqa-test', 
+        'zero-bench-test',
+    ]:
         from . benchmark import evaluate_chinese_simpleqa, evaluate_browsecomp_zh, evaluate_openai_brosecomp_hle, evaluate_openai_simpleqa
-        if data_source in ['mmsearch-test', 'simpleqa-openai-test']:
+        if data_source in ['simpleqa-openai-test', 'mmsearch-test', 'zero-bench-test']:
             res = evaluate_openai_simpleqa(solution_str, ground_truth, extra_info)
+        elif data_source in ['chinese_simpleqa-test', 'simple-vqa-test']:
+            res = evaluate_chinese_simpleqa(solution_str, ground_truth, extra_info)
         elif data_source == 'browsecomp-openai-test':
             res = evaluate_openai_brosecomp_hle(solution_str, ground_truth, extra_info)
-        elif data_source == 'chinese_simpleqa-test':
-            res = evaluate_chinese_simpleqa(solution_str, ground_truth, extra_info)
         elif data_source == 'browsecomp-zh-test':
             res = evaluate_browsecomp_zh(solution_str, ground_truth, extra_info)
+        else:
+            raise ValueError(f" [ERROR] invalid {data_source=}")
 
     elif data_source in ['thinklite_eureka', 'xince']:
         from . import vl_agent

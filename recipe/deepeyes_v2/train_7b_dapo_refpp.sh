@@ -14,6 +14,8 @@ EUREKA_DATASET_TRAIN=${BASEDIR}/data_thinklite_reasoning_function_call.parquet
 XINCE_DATASET_TRAIN=${BASEDIR}/train_xince_acc.parquet
 SEEKWORLD_DATASET_TRAIN=${BASEDIR}/seekworld_train_acc.parquet
 
+DATA_V1_THINKLITE=/cpfs/user/fengyuan/verl_data/minghao_data/thinklite_modified_250703.parquet
+
 DATA_V2_TRAIN_0_1_2=/cpfs/user/fengyuan/verl_data/minghao_data/data_0.1.2_visual_toolbox_v2_acc_v2.parquet
 DATA_V2_TRAIN_0_8_SPLIT1=/cpfs/user/fengyuan/verl_data/minghao_data/minghao_data_vnew/data_v0.8_visual_toolbox_v2_acc_split1_v2.parquet
 DATA_V2_TRAIN_0_8_SPLIT2=/cpfs/user/fengyuan/verl_data/minghao_data/minghao_data_vnew/data_v0.8_visual_toolbox_v2_acc_split2_v2.parquet
@@ -40,7 +42,7 @@ REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-7B-Instruct
 PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     +debug=False \
     +vs_debug=False \
-    data.train_files=[${DATA_V2_TRAIN_0_1_2},${DATA_V2_TRAIN_0_8_SPLIT1},${DATA_V2_TRAIN_0_8_SPLIT2},${DATA_V2_TRAIN_THINKLITE},${DATA_TRAIN_SEEKWORLD_WITH_SEARCH},${DATA_TRAIN_BROWSECOMP}] \
+    data.train_files=[${DATA_V2_TRAIN_0_1_2},${DATA_V2_TRAIN_0_8_SPLIT1},${DATA_V2_TRAIN_0_8_SPLIT2},${DATA_V2_TRAIN_THINKLITE},${DATA_TRAIN_SEEKWORLD},${DATA_TRAIN_BROWSECOMP}] \
     data.val_files=[${DATA_V2_TEST_GEOGUESSR_WITH_SEARCH}] \
     data.train_batch_size=256 \
     data.gen_batch_size=128 \
