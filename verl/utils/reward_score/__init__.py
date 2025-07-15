@@ -46,10 +46,12 @@ def default_compute_score(data_source, solution_str, ground_truth, extra_info=No
 
         # from . import math_verify
         # res = math_verify.compute_score(solution_str, ground_truth)
-    elif data_source == "math_dapo" or data_source.startswith("aime"):
-        from . import math_dapo
 
-        res = math_dapo.compute_score(solution_str, ground_truth)
+    # elif data_source == "math_dapo" or data_source.startswith("aime"):
+    #     from . import math_dapo
+
+    #     res = math_dapo.compute_score(solution_str, ground_truth)
+
     elif data_source in [
         "numina_aops_forum",
         "numina_synthetic_math",
@@ -86,17 +88,29 @@ def default_compute_score(data_source, solution_str, ground_truth, extra_info=No
         from . import agent
         res = agent.compute_score_eval(solution_str, ground_truth)
 
-    elif data_source in ['vstar', 'vl_agent', 'chart', 'browsecomp']:
+    elif data_source in ['vstar', 'vl_agent', 'chart', 'browsecomp', 'seekworld']:
         from . import vl_agent
         res = vl_agent.compute_score(solution_str, ground_truth, extra_info)
 
-    elif data_source in ['geoguessr']:
-        from . import vl_agent
-        res = vl_agent.compute_common_reasoning(solution_str, ground_truth, extra_info)
+    # elif data_source in ['seekworld', 'xince']:
+    #     from . import vl_agent
+    #     res = vl_agent.compute_common_reasoning(solution_str, ground_truth, extra_info)
 
-    elif data_source in ['seekworld-test', 'vstar-test']:
+    elif data_source in ["skywork-math", "revisual-r1"]:
+        from . import vl_agent
+        res = vl_agent.compute_score_math_with_boxed(solution_str, ground_truth, extra_info)
+
+    elif data_source in ["thinklite_eureka", "thinklite_eureka-no_tool", "xince"]:
+        from . import vl_agent
+        res = vl_agent.compute_score_math(solution_str, ground_truth, extra_info)
+
+    elif data_source in ['seekworld-test', 'vstar-test', 'visulogic-test', 'ocr_reasoning-test']:
         from . import vl_agent
         res = vl_agent.compute_score_acc(solution_str, ground_truth, extra_info)
+
+    elif data_source in ['aime24', 'aime25']:
+        from . import vl_agent
+        res = vl_agent.evaluate_aime(solution_str, ground_truth, extra_info)
 
     elif data_source in [
         'mmsearch-test', 
@@ -118,10 +132,6 @@ def default_compute_score(data_source, solution_str, ground_truth, extra_info=No
             res = evaluate_browsecomp_zh(solution_str, ground_truth, extra_info)
         else:
             raise ValueError(f" [ERROR] invalid {data_source=}")
-
-    elif data_source in ['thinklite_eureka', 'xince']:
-        from . import vl_agent
-        res = vl_agent.compute_score_math(solution_str, ground_truth, extra_info)
 
     elif data_source in ["frozenlake"]:
         res = 0.0

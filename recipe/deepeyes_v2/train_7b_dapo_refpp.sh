@@ -1,7 +1,7 @@
 set -x
 
 PROJECT_NAME="xhs-deepeyes"
-EXPERIMENT_NAME="search_crop_debug_v8"
+EXPERIMENT_NAME="agent_merged_v3"
 
 export SAVE_CHECKPOINT_DIR=/diancpfs/user/fengyuan/verl_checkpoints
 # export VLLM_ATTENTION_BACKEND=XFORMERS # vllm + qwen2-7b with flash_attn has some issues
@@ -29,9 +29,37 @@ DATA_TRAIN_GEOGUESSR_2=/cpfs/user/fengyuan/code/github/zero-rl-data/geoguessr/de
 DATA_TRAIN_SEEKWORLD_WITH_SEARCH=/cpfs/user/fengyuan/verl_data/minghao_data/seekworld_train_acc_acc_v2_with_search.parquet
 DATA_TRAIN_BROWSECOMP=/cpfs/user/fengyuan/verl_data/minghao_data/browse_comp_xhs.parquet
 
-DATA_V2_TEST_VSTAR=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/vstar_test_v2.parquet
-DATA_V2_TEST_GEOGUESSR=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/seekworld_test_v2_v2.parquet
-DATA_V2_TEST_GEOGUESSR_WITH_SEARCH=/cpfs/user/fengyuan/code/github/VeRL-Agent-minghao/data/seekworld_test_v2_v2_with_search.parquet
+# train data
+DATA_TRAIN_V012=/cpfs/user/fengyuan/benchmarks/train_parquet/data_0.1.2_visual_toolbox_v2_acc_v2.parquet
+DATA_TRAIN_V08_SPLIT1=/cpfs/user/fengyuan/benchmarks/train_parquet/data_v0.8_visual_toolbox_v2_acc_split1_v2.parquet
+DATA_TRAIN_V08_SPLIT2=/cpfs/user/fengyuan/benchmarks/train_parquet/data_v0.8_visual_toolbox_v2_acc_split1_v2.parquet
+DATA_TRAIN_THINKLITE=/cpfs/user/fengyuan/benchmarks/train_parquet/data_thinklite_reasoning_function_call_acc_v2.parquet
+DATA_TRAIN_THINKLITE_NO_TOOL=/cpfs/user/fengyuan/benchmarks/train_parquet/data_thinklite_v0.parquet
+DATA_TRAIN_SEEKWORLD=/cpfs/user/fengyuan/benchmarks/train_parquet/seekworld_train_acc_acc_v2.parquet
+DATA_TRAIN_BROWSECOMP=/cpfs/user/fengyuan/benchmarks/train_parquet/browse_comp_xhs.parquet
+DATA_TRAIN_PHYSICS=/cpfs/user/fengyuan/benchmarks/train_parquet/physreason-train.parquet
+DATA_TRAIN_REVISUAL_MMRL=/cpfs/user/fengyuan/benchmarks/train_parquet/revisual_mmrl-train.parquet
+DATA_TRAIN_REVISUAL_TEXTRL=/cpfs/user/fengyuan/benchmarks/train_parquet/revisual_textrl-train.parquet
+DATA_TRAIN_SKYWORK_MATH=/cpfs/user/fengyuan/benchmarks/train_parquet/skywork-math-train.parquet
+DATA_TRAIN_XINCE=/cpfs/user/fengyuan/benchmarks/train_parquet/xince-train.parquet
+
+# benchmark data
+DATA_TEST_VSTAR=/cpfs/user/fengyuan/benchmarks/eval_parquet/vstar-test.parquet
+DATA_TEST_SEEKWORLD=/cpfs/user/fengyuan/benchmarks/eval_parquet/seekworld-test.parquet
+DATA_TEST_MMSEARCH=/cpfs/user/fengyuan/benchmarks/eval_parquet/mmsearch-test.parquet
+DATA_TEST_BROWSECOMP_OPENAI=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-browsecomp-test.parquet
+DATA_TEST_BROWSECOMP_ZH=/cpfs/user/fengyuan/benchmarks/eval_parquet/browsecomp-zh-test.parquet
+DATA_TEST_CHINESE_SIMPLEQA=/cpfs/user/fengyuan/benchmarks/eval_parquet/chinese_simpleqa-test.parquet
+DATA_TEST_SIMPLEQA_OPENAI=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test.parquet
+DATA_TEST_SIMPLE_VQA=/cpfs/user/fengyuan/benchmarks/eval_parquet/simple-vqa-test.parquet
+DATA_TEST_ZERO_BENCH=/cpfs/user/fengyuan/benchmarks/eval_parquet/zero-bench-test.parquet
+DATA_TEST_OCR_REASONING=/cpfs/user/fengyuan/benchmarks/eval_parquet/ocr-reasoning-test.parquet
+DATA_TEST_VISULOGIC=/cpfs/user/fengyuan/benchmarks/eval_parquet/visulogic-test.parquet
+DATA_TEST_AIME=/cpfs/user/fengyuan/benchmarks/eval_parquet/aime-test.parquet
+
+# split large eval dataset to avoid oom error
+DATA_TEST_SIMPLEQA_OPENAI_SPLIT1=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test_split1.parquet
+DATA_TEST_SIMPLEQA_OPENAI_SPLIT2=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test_split2.parquet
 
 CUSTOM_STOP='["</tool_call>"]'
 LOSS_AGG_MODE="token-mean"
@@ -42,12 +70,12 @@ REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-7B-Instruct
 PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     +debug=False \
     +vs_debug=False \
-    data.train_files=[${DATA_V2_TRAIN_0_1_2},${DATA_V2_TRAIN_0_8_SPLIT1},${DATA_V2_TRAIN_0_8_SPLIT2},${DATA_V2_TRAIN_THINKLITE},${DATA_TRAIN_SEEKWORLD},${DATA_TRAIN_BROWSECOMP}] \
-    data.val_files=[${DATA_V2_TEST_GEOGUESSR_WITH_SEARCH}] \
+    data.train_files=[${DATA_TRAIN_V012},${DATA_TRAIN_SEEKWORLD},${DATA_TRAIN_THINKLITE_NO_TOOL},${DATA_TRAIN_V08_SPLIT1},${DATA_TRAIN_V08_SPLIT2},${DATA_TRAIN_BROWSECOMP},${DATA_TRAIN_PHYSICS},${DATA_TRAIN_REVISUAL_MMRL},${DATA_TRAIN_REVISUAL_TEXTRL},${DATA_TRAIN_SKYWORK_MATH},${DATA_TRAIN_XINCE}] \
+    data.val_files=[${DATA_TEST_VSTAR},${DATA_TEST_ZERO_BENCH},${DATA_TEST_MMSEARCH},${DATA_TEST_AIME}] \
     data.train_batch_size=256 \
     data.gen_batch_size=128 \
-    data.max_prompt_length=12288 \
-    data.max_response_length=16384 \
+    data.max_prompt_length=20480 \
+    data.max_response_length=12288 \
     data.return_raw_chat=True \
     data.filter_overlong_prompts=True \
     algorithm.adv_estimator=reinforce_plus_plus \
@@ -79,7 +107,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.rollout.n=16 \
     actor_rollout_ref.rollout.temperature=1 \
     actor_rollout_ref.rollout.max_num_batched_tokens=32768 \
-    actor_rollout_ref.rollout.gpu_memory_utilization=0.7 \
+    actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
     actor_rollout_ref.rollout.enforce_eager=False \
     actor_rollout_ref.rollout.free_cache_engine=False \
     actor_rollout_ref.rollout.enable_chunked_prefill=False \
@@ -89,12 +117,12 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     actor_rollout_ref.rollout.agent.activate_agent=True \
     actor_rollout_ref.rollout.agent.tool_name_key=env_name \
-    actor_rollout_ref.rollout.agent.single_response_max_tokens=8192 \
-    actor_rollout_ref.rollout.agent.max_turns=9 \
+    actor_rollout_ref.rollout.agent.single_response_max_tokens=10240 \
+    actor_rollout_ref.rollout.agent.max_turns=10 \
     actor_rollout_ref.rollout.agent.concurrent_workers=1 \
     actor_rollout_ref.rollout.agent.custom_stop=${CUSTOM_STOP} \
     actor_rollout_ref.rollout.agent.show_tqdm=True \
-    reward_model.reward_manager=dapo_async \
+    reward_model.reward_manager=dapo \
     reward_model.num_workers=16 \
     critic.cliprange_value=50 \
     critic.model.path=${REF_MODEL_PATH} \

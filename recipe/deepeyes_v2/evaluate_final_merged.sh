@@ -24,6 +24,9 @@ DATA_TEST_CHINESE_SIMPLEQA=/cpfs/user/fengyuan/benchmarks/eval_parquet/chinese_s
 DATA_TEST_SIMPLEQA_OPENAI=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test.parquet
 DATA_TEST_SIMPLE_VQA=/cpfs/user/fengyuan/benchmarks/eval_parquet/simple-vqa-test.parquet
 DATA_TEST_ZERO_BENCH=/cpfs/user/fengyuan/benchmarks/eval_parquet/zero-bench-test.parquet
+DATA_TEST_OCR_REASONING=/cpfs/user/fengyuan/benchmarks/eval_parquet/ocr-reasoning-test.parquet
+DATA_TEST_VISULOGIC=/cpfs/user/fengyuan/benchmarks/eval_parquet/visulogic-test.parquet
+DATA_TEST_AIME=/cpfs/user/fengyuan/benchmarks/eval_parquet/aime-test.parquet
 
 # split large eval dataset to avoid oom error
 DATA_TEST_SIMPLEQA_OPENAI_SPLIT1=/cpfs/user/fengyuan/benchmarks/eval_parquet/openai-simpleqa-test_split1.parquet
@@ -35,22 +38,22 @@ export WORKING_DIR=${WORKING_DIR:-"${PWD}"}
 export RUNTIME_ENV=${RUNTIME_ENV:-"${WORKING_DIR}/verl/trainer/runtime_env.yaml"}
 
 REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-7B-Instruct
-REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-32B-Instruct
+# REF_MODEL_PATH=/cpfs/user/fengyuan/backbone/qwen25/Qwen2.5-VL-32B-Instruct
 
 # REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_7b_debug_v16/global_step_32/actor/huggingface
 # REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/deepeyes-dapo/dapo_32b_debug_v1/global_step_152/actor/huggingface
-# REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/xhs-deepeyes/search_crop_debug_v8/global_step_136/actor/huggingface
+REF_MODEL_PATH=/diancpfs/user/fengyuan/verl_checkpoints/xhs-deepeyes/search_crop_debug_v8/global_step_136/actor/huggingface
 
-VAL_FILES='[${DATA_TEST_VSTAR},${DATA_TEST_SEEKWORLD},${DATA_TEST_MMSEARCH},${DATA_TEST_ZERO_BENCH},${DATA_TEST_SIMPLE_VQA},${DATA_TEST_BROWSECOMP_OPENAI},${DATA_TEST_BROWSECOMP_ZH},${DATA_TEST_CHINESE_SIMPLEQA},${DATA_TEST_SIMPLEQA_OPENAI}]]'
+VAL_FILES='[${DATA_TEST_VSTAR},${DATA_TEST_SEEKWORLD},${DATA_TEST_MMSEARCH},${DATA_TEST_OCR_REASONING},${DATA_TEST_VISULOGIC},${DATA_TEST_ZERO_BENCH},${DATA_TEST_SIMPLE_VQA},${DATA_TEST_BROWSECOMP_OPENAI},${DATA_TEST_BROWSECOMP_ZH},${DATA_TEST_CHINESE_SIMPLEQA},${DATA_TEST_SIMPLEQA_OPENAI}]]'
 
 PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     +debug=False \
     +vs_debug=False \
     data.train_files=[${DATA_TRAIN_GEOGUESSR}] \
-    data.val_files=[${DATA_TEST_ZERO_BENCH}] \
+    data.val_files=[${DATA_TEST_MMSEARCH}] \
     data.train_batch_size=32 \
-    data.max_prompt_length=17000 \
-    data.max_response_length=15768 \
+    data.max_prompt_length=20480 \
+    data.max_response_length=12288 \
     data.return_raw_chat=True \
     algorithm.adv_estimator=grpo \
     algorithm.use_kl_in_reward=False \
@@ -75,7 +78,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.deepeyes_v2.main_dapo \
     actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.rollout.tensor_model_parallel_size=2 \
     actor_rollout_ref.rollout.name=vllm \
-    actor_rollout_ref.rollout.n=16 \
+    actor_rollout_ref.rollout.n=4 \
     actor_rollout_ref.rollout.max_num_batched_tokens=8192 \
     actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
     actor_rollout_ref.rollout.enforce_eager=False \

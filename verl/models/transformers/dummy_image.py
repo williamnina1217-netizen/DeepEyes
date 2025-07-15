@@ -107,7 +107,7 @@ def qwen2_5_vl_forward(
             image_embeds = image_embeds.to(inputs_embeds.device, inputs_embeds.dtype)
             inputs_embeds = inputs_embeds.masked_scatter(image_mask, image_embeds)
         elif dummy_mm_inputs is not None:
-            logger.warning("[RedAccel] use dummy pixel_values in case of hang in zero3 stage")
+            # logger.warning("[RedAccel] use dummy pixel_values in case of hang in zero3 stage")
             image_embeds = self.visual(
                 dummy_mm_inputs["pixel_values"].type(self.visual.dtype).to(inputs_embeds.device),
                 grid_thw=dummy_mm_inputs["image_grid_thw"].to(inputs_embeds.device),
